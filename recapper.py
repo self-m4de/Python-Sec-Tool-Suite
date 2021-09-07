@@ -5,10 +5,11 @@ import re
 import sys
 import zlib
 
-OUTDIR = '/root/Desktop/pictures'
-PCAPS = '/root/Downloads'
+OUTDIR = '/home/kali/Desktop/pictures/'
+PCAPS = '/home/kali/Downloads/'
 
-Response = collections.namedtuple('Response',['header','payload'])
+Response = collections.namedtuple('Response', ['header', 'payload'])
+
 
 def get_header(payload):
     try:
@@ -23,11 +24,12 @@ def get_header(payload):
         return None
     return header
 
+
 def extract_content(Response, content_name='image'):
     content, content_type = None, None
     if content_name in Response.header['Content-Type']:
         content_type = Response.header['Content-Type'].split('/')[1]
-        content = Response.payload[Response.payload.index(b'\r\n\r\n')+4]
+        content = Response.payload[Response.payload.index(b'\r\n\r\n')+4:]
 
         if 'Content-Encoding' in Response.header:
             if Response.header['Content-Encoding'] == "gzip":
@@ -36,7 +38,8 @@ def extract_content(Response, content_name='image'):
                 content = zlib.decompress(Response.payload)
 
     return content, content_type
-    
+
+
 class Recapper:
     def __init__(self, fname):
         pcap = rdpcap(fname)
@@ -53,7 +56,7 @@ class Recapper:
                 except IndexError:
                     sys.stdout.write('x')
                     sys.stdout.flush()
-            
+
             if payload:
                 header = get_header(payload)
                 if header is None:
@@ -69,8 +72,9 @@ class Recapper:
                 with open(fname, 'wb') as f:
                     f.write(content)
 
+
 if __name__ == '__main__':
-    pfile = 'pcap.pcap'         # os.path.join(PCAPS, 'pcap.pcap')
+    pfile = os.path.join(PCAPS, 'pcap.pcap')
     recapper = Recapper(pfile)
     recapper.get_responses()
     recapper.write('image')
